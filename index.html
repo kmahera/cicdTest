@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Kite login</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f7fa;color:#1f2937;margin:0;padding:24px;display:flex;justify-content:center}
+  .card{background:#fff;max-width:460px;width:100%;border-radius:14px;padding:24px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+  h1{font-size:1.3rem;margin:0 0 8px}
+  .ok{color:#15803d}.err{color:#b91c1c}
+  input{width:100%;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1rem;padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:12px 0}
+  button{width:100%;padding:14px;font-size:1.05rem;border:0;border-radius:8px;background:#2563eb;color:#fff;cursor:pointer}
+  button:active{background:#1d4ed8}
+  p.small{font-size:.9rem;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1 id="title">Reading login result…</h1>
+  <div id="ok" hidden>
+    <p>Copy this token and paste it into your Grok Bot chat.</p>
+    <input id="token" type="text" readonly>
+    <button id="copy" type="button">Copy token</button>
+    <p class="small">The token works once and expires within minutes, so paste it soon.</p>
+  </div>
+  <p id="msg" class="small"></p>
+</div>
+<script>
+(function () {
+  var q = new URLSearchParams(window.location.search);
+  var token = q.get("request_token");
+  var status = q.get("status");
+  var title = document.getElementById("title");
+  var msg = document.getElementById("msg");
+
+  // Remove the token from the address bar so it is not left in browser history.
+  if (window.history && history.replaceState) {
+    history.replaceState(null, "", window.location.pathname);
+  }
+
+  if (token && (!status || status === "success")) {
+    title.textContent = "Kite login successful";
+    title.className = "ok";
+    document.getElementById("ok").hidden = false;
+    var box = document.getElementById("token");
+    box.value = token;
+    document.getElementById("copy").onclick = function () {
+      var btn = this;
+      function done() { btn.textContent = "Copied ✓"; setTimeout(function () { btn.textContent = "Copy token"; }, 2000); }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(token).then(done, fallback);
+      } else { fallback(); }
+      function fallback() {
+        box.focus(); box.select(); box.setSelectionRange(0, 99999);
+        try { document.execCommand("copy"); done(); } catch (e) { msg.textContent = "Select the token and copy it manually."; }
+      }
+    };
+  } else {
+    title.textContent = "Kite login did not complete";
+    title.className = "err";
+    msg.textContent = "Status: " + (status || "unknown") + ". Please try the login link again.";
+  }
+})();
+</script>
+</body>
+</html>
